@@ -41,7 +41,7 @@ except ImportError:
 
 
 def training(gs_type, dataset: ModelParams, opt, pipe, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint,
-             debug_from, save_xyz):
+             debug_from, save_xyz, save_stats):
     time_start = time.process_time()
     init_time = time.time()
     first_iter = 0
@@ -74,6 +74,13 @@ def training(gs_type, dataset: ModelParams, opt, pipe, testing_iterations, savin
         os.makedirs(f"{scene.model_path}/xyz", exist_ok=True)
         if save_xyz and (iteration % 5000 == 1 or iteration == opt.iterations):
             torch.save(gaussians.get_xyz, f"{scene.model_path}/xyz/{iteration}.pt")
+        os.makedirs(f"{scene.model_path}/save_stats", exist_ok=True)
+        if save_stats and (iteration % 5000 == 1 or iteration == opt.iterations):
+            torch.save({
+                "xyz": gaussians.get_xyz,         
+                "sigma": gaussians.sigma,          
+                "frames": gaussians.frames         
+            }, f"{scene.model_path}/save_stats/{iteration}.pt")
 
         iter_start.record()
 
@@ -275,6 +282,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default=None)
     parser.add_argument("--save_xyz", action='store_true')
+    parser.add_argument("--save_stats", action='store_true')
     parser.add_argument("--poly_degree", type=int, default=7)
     parser.add_argument("--batch_size", type=int, default=3)
 
@@ -305,7 +313,7 @@ if __name__ == "__main__":
         args.gs_type,
         lp.extract(args), op.extract(args), pp.extract(args),
         args.test_iterations, args.save_iterations, args.checkpoint_iterations,
-        args.start_checkpoint, args.debug_from, args.save_xyz
+        args.start_checkpoint, args.debug_from, args.save_xyz, args.save_stats
     )
 
     # All done
