@@ -78,8 +78,8 @@ def training(gs_type, dataset: ModelParams, opt, pipe, testing_iterations, savin
         if save_stats and (iteration % 5000 == 1 or iteration == opt.iterations):
             torch.save({
                 "xyz": gaussians.get_xyz,         
-                "sigma": gaussians.sigma,          
-                "frames": gaussians.frames         
+                "sigma": gaussians.get_sigma,          
+                # "frames": gaussians.frames         
             }, f"{scene.model_path}/save_stats/{iteration}.pt")
 
         iter_start.record()
