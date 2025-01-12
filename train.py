@@ -79,7 +79,7 @@ def training(gs_type, dataset: ModelParams, opt, pipe, testing_iterations, savin
             torch.save({
                 "xyz": gaussians.get_xyz,         
                 "sigma": gaussians.get_sigma,          
-                # "frames": gaussians.frames         
+                "frames": gaussians.frames         
             }, f"{scene.model_path}/save_stats/{iteration}.pt")
 
         iter_start.record()
