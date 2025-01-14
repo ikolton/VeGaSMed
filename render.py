@@ -25,14 +25,28 @@ def render_set( model_path,
                 pipeline, 
                 background, 
                 interp, 
-                extension):
+                extension,
+                save_render_data=False):
     render_path = os.path.join(model_path, f"render")
+    render_data_path = os.path.join(model_path, f"render_data") 
 
     makedirs(render_path, exist_ok=True)
+    if save_render_data:
+        makedirs(render_data_path, exist_ok=True)
     for idx, view in enumerate(tqdm(views, desc="Rendering progress")):
         for i in range(interp):
-            rendering = render(view, gaussians, pipeline, background, interp=interp, interp_idx=i, modify_func=modify_func)["render"].cpu()
+            result = render(view, gaussians, pipeline, background, interp=interp, interp_idx=i, modify_func=modify_func)
+            rendering = result["render"].cpu()
+            # rendering = render(view, gaussians, pipeline, background, interp=interp, interp_idx=i, modify_func=modify_func)["render"].cpu()
             torchvision.utils.save_image(rendering, os.path.join(render_path, '{0:05d}'.format(idx) + "_" + str(i) + extension))
+
+            if save_render_data:
+                radii = render_pkg["radii"].cpu()
+                visibility_filter = render_pkg["visibility_filter"].cpu()
+                torch.save({
+                    "radii": radii,
+                    "visibility_filter": visibility_filter
+                }, os.path.join(render_data_path, f"{idx:05d}_{i}.pt"))
 
 def render_sets(dataset : ModelParams,
                 iteration : int, 
@@ -40,7 +54,8 @@ def render_sets(dataset : ModelParams,
                 skip_train : bool, 
                 skip_test : bool, 
                 interp : int,
-                extension: str):
+                extension: str,
+                save_render_data: bool):
     with torch.no_grad():
         gaussians = gaussianModelRender['gs'](dataset.sh_degree)
         scene = Scene(dataset, gaussians, load_iteration=iteration, shuffle=False)
@@ -48,7 +63,7 @@ def render_sets(dataset : ModelParams,
         bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
         background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
         
-        render_set(dataset.model_path, scene.loaded_iter, scene.getTestCameras(), gaussians, pipeline, background, interp, extension)
+        render_set(dataset.model_path, scene.loaded_iter, scene.getTestCameras(), gaussians, pipeline, background, interp, extension, save_render_data)
 
 if __name__ == "__main__":
     # Set up command line argument parser
@@ -65,6 +80,7 @@ if __name__ == "__main__":
     parser.add_argument("--poly_degree", type=int, default=1)
     parser.add_argument("--interp", type=int, default=1)
     parser.add_argument("--extension", type=str, default=".png")
+    parser.add_argument("--save_render_data", action="store_true")
 
     args = get_combined_args(parser)
     model.gs_type = "gs"
@@ -78,4 +94,4 @@ if __name__ == "__main__":
     # Initialize system state (RNG)
     safe_state(args.quiet)
 
-    render_sets(model.extract(args), args.iteration, pipeline.extract(args), args.skip_train, args.skip_test, args.interp, args.extension)
+    render_sets(model.extract(args), args.iteration, pipeline.extract(args), args.skip_train, args.skip_test, args.interp, args.extension, args.save_render_data)
