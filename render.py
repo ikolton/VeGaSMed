@@ -41,8 +41,8 @@ def render_set( model_path,
             torchvision.utils.save_image(rendering, os.path.join(render_path, '{0:05d}'.format(idx) + "_" + str(i) + extension))
 
             if save_render_data:
-                radii = render_pkg["radii"].cpu()
-                visibility_filter = render_pkg["visibility_filter"].cpu()
+                radii = result["radii"].cpu()
+                visibility_filter = result["visibility_filter"].cpu()
                 torch.save({
                     "radii": radii,
                     "visibility_filter": visibility_filter
