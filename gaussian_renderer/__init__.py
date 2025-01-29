@@ -137,8 +137,7 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
             print(f"🟢 Sampling Grid X range: {sampling_grid[..., 0].min().item()} → {sampling_grid[..., 0].max().item()}")
             print(f"🟢 Sampling Grid Y range: {sampling_grid[..., 1].min().item()} → {sampling_grid[..., 1].max().item()}")
 
-            print(f"🟢 Mask Values min/max before filtering: {mask_values.min().item()} → {mask_values.max().item()}")
-            print(f"🟢 Mask Values (first 10):", mask_values[:10])
+
 
 
         # ✅ Sample mask at Gaussian positions
