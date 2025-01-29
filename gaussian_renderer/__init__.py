@@ -118,8 +118,8 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         sampling_grid = torch.stack([x_gauss, y_gauss], dim=-1).unsqueeze(0).unsqueeze(0)
 
         # ✅ Ensure mask_tensor is [1, 1, H, W] (remove depth if necessary)
-        mask_tensor = mask_tensor.squeeze(2)
-        
+        mask_tensor = mask_tensor.squeeze(1)
+
         print(f"✅ Mask tensor shape: {mask_tensor.shape}")  # Should be [1, 1, H, W]
         print(f"✅ Sampling grid shape: {sampling_grid.shape}")
 
