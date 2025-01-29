@@ -60,7 +60,7 @@ def render_set( model_path,
         # Load the mask if a mask folder is provided
         mask_tensor, x_grid, y_grid = (None, None, None)
         if mask_folder:
-            mask_data = load_mask(mask_folder, idx, H, W)
+            mask_data = load_mask(mask_folder, idx+1, H, W)
             if mask_data[0] is not None:
                 mask_tensor, x_grid, y_grid = mask_data
 
