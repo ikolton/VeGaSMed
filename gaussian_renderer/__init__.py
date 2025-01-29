@@ -115,10 +115,14 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         x_gauss = means2D[:, 0]  # Gaussian X-coordinates (normalized)
         y_gauss = means2D[:, 1]  # Gaussian Y-coordinates (normalized)
 
-        # Sample mask at Gaussian positions
+        # ✅ Add a third dimension (z=0) to the sampling grid
+        sampling_grid = torch.stack([x_gauss, y_gauss, torch.zeros_like(x_gauss)], dim=-1)  # Shape: [num_gaussians, 3]
+        sampling_grid = sampling_grid.unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, num_gaussians, 3]
+
+        # ✅ Now, grid_sample() expects a 3D grid, which we provide
         mask_values = torch.nn.functional.grid_sample(
-            mask_tensor.unsqueeze(0).unsqueeze(0),  # Add batch & channel dims
-            torch.stack([x_gauss, y_gauss], dim=-1).unsqueeze(0).unsqueeze(0),  # Shape [1, 1, num_gaussians, 2]
+            mask_tensor.unsqueeze(0).unsqueeze(0),  # Shape: [1, 1, H, W]
+            sampling_grid,  # Shape: [1, 1, num_gaussians, 3]
             mode="nearest", align_corners=True
         ).squeeze()
 
