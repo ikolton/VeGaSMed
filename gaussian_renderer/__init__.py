@@ -114,17 +114,17 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         x_gauss = means2D[:, 0]  # Gaussian X-coordinates (normalized)
         y_gauss = means2D[:, 1]  # Gaussian Y-coordinates (normalized)
 
-        # ✅ Add a third dimension (z=0) to the sampling grid
-        sampling_grid = torch.stack([x_gauss, y_gauss, torch.zeros_like(x_gauss)], dim=-1)  # Shape: [num_gaussians, 3]
-        sampling_grid = sampling_grid.unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, num_gaussians, 3]
+        # ✅ Create correct sampling grid [num_gaussians, 2] (NO z-dimension)
+        sampling_grid = torch.stack([x_gauss, y_gauss], dim=-1)  # Shape: [num_gaussians, 2]
+        sampling_grid = sampling_grid.unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, num_gaussians, 2]
 
-        # ✅ Ensure mask_tensor has correct shape: [1, 1, 1, H, W]
-        mask_tensor = mask_tensor.unsqueeze(1)  # ✅ Correct: Adds a depth dimension
+        # ✅ Ensure mask_tensor has correct shape: [1, 1, H, W] (NO depth dimension)
+        mask_tensor = mask_tensor.squeeze(2) if mask_tensor.dim() == 5 else mask_tensor  # Remove extra depth if exists
 
         # Sample mask at Gaussian positions
         mask_values = torch.nn.functional.grid_sample(
             mask_tensor,  # ✅ Now properly formatted
-            sampling_grid,  # Shape: [1, 1, num_gaussians, 3]
+            sampling_grid,  # Shape: [1, 1, num_gaussians, 2]
             mode="nearest", align_corners=True
         ).squeeze()
 
