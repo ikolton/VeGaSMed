@@ -128,6 +128,8 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         mask_tensor = mask_tensor.unsqueeze(1)
 
         if viewpoint_camera.time == 325:
+            print(means2D.shape)
+            print(means2D[:10])
             print(f"✅ Sampling grid shape: {sampling_grid.shape}")
             print(f"✅ Sampling grid X range: {sampling_grid[..., 0].min().item()} → {sampling_grid[..., 0].max().item()}")
             print(f"✅ Sampling grid Y range: {sampling_grid[..., 1].min().item()} → {sampling_grid[..., 1].max().item()}")
