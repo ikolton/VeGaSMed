@@ -113,7 +113,7 @@ if __name__ == "__main__":
     parser.add_argument("--interp", type=int, default=1)
     parser.add_argument("--extension", type=str, default=".png")
     parser.add_argument("--save_render_data", action="store_true")
-    parser.add_argument("--mask", type=str, default=None, 
+    parser.add_argument("--mask", type=str, default="NO_MASK", 
                         help="Path to the folder containing per-frame masks")
 
     args = get_combined_args(parser)
@@ -127,5 +127,8 @@ if __name__ == "__main__":
 
     # Initialize system state (RNG)
     safe_state(args.quiet)
+
+    if args.mask == "NO_MASK":
+        args.mask = None
 
     render_sets(model.extract(args), args.iteration, pipeline.extract(args), args.skip_train, args.skip_test, args.interp, args.extension, args.mask, args.save_render_data)
