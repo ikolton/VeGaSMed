@@ -112,14 +112,16 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     if mask_tensor is not None:
         if torch.count_nonzero(mask_tensor) != 0:
             print(f"🚨 WARNING: Mask is not empty")
-            print(f"🟢 means2D X min/max: {means2D[:, 0].min().item()} → {means2D[:, 0].max().item()}")
-            print(f"🟢 means2D Y min/max: {means2D[:, 1].min().item()} → {means2D[:, 1].max().item()}")
 
+        homogeneous_coords = torch.cat([means3D, torch.ones_like(means3D[:, :1])], dim=-1)  # Convert to homogeneous coords
+        projected = torch.matmul(viewpoint_camera.full_proj_transform, homogeneous_coords.T).T  # Apply projection
+        projected_means2D = projected[:, :2] / projected[:, 3:4]  # Divide by w to normalize
+        projected_means2D = projected_means2D.clamp(-1, 1)  # Clamp to valid range
     
 
         
-        x_gauss = means2D[:, 0]  # X-coordinates
-        y_gauss = means2D[:, 1]  # Y-coordinates
+        x_gauss = projected_means2D[:, 0]  # X-coordinates
+        y_gauss = projected_means2D[:, 1]  # Y-coordinates
 
         # ✅ Ensure sampling grid is [1, 1, num_gaussians, 2] (no Z-dimension)
         sampling_grid = torch.stack([x_gauss, y_gauss], dim=-1).unsqueeze(0).unsqueeze(0)
@@ -133,6 +135,8 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
             print(f"✅ Sampling grid shape: {sampling_grid.shape}")
             print(f"✅ Sampling grid X range: {sampling_grid[..., 0].min().item()} → {sampling_grid[..., 0].max().item()}")
             print(f"✅ Sampling grid Y range: {sampling_grid[..., 1].min().item()} → {sampling_grid[..., 1].max().item()}")
+            print(f"🔵 projected_means2D min/max: {projected_means2D.min().item()} → {projected_means2D.max().item()}")
+
 
 
         # ✅ Sample mask at Gaussian positions
