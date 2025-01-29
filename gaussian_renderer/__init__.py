@@ -27,7 +27,7 @@ def norm_gauss(m, sigma, t):
     log = ((m - t)**2 / sigma**2) / -2
     return torch.exp(log)
 
-def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, scaling_modifier = 1.0, override_color = None, interp=1, interp_idx=0, modify_func=None):
+def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, scaling_modifier = 1.0, override_color = None, interp=1, interp_idx=0, modify_func=None, mask_tensor=None, x_grid=None, y_grid=None):
     """
     Render the scene. 
     
@@ -108,6 +108,23 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     s = scales[:,[0,-1]]
     mask2 = (s > 0.0001).all(dim=1)
     mask = torch.logical_and(mask1, mask2)
+
+    ### **🔹 Apply Mask Filtering (If Provided)**
+    if mask_tensor is not None:
+        # Get 2D Gaussian positions
+        x_gauss = means2D[:, 0]  # Gaussian X-coordinates (normalized)
+        y_gauss = means2D[:, 1]  # Gaussian Y-coordinates (normalized)
+
+        # Sample mask at Gaussian positions
+        mask_values = torch.nn.functional.grid_sample(
+            mask_tensor.unsqueeze(0).unsqueeze(0),  # Add batch & channel dims
+            torch.stack([x_gauss, y_gauss], dim=-1).unsqueeze(0).unsqueeze(0),  # Shape [1, 1, num_gaussians, 2]
+            mode="nearest", align_corners=True
+        ).squeeze()
+
+        # Mask out Gaussians that fall outside the valid region
+        mask_filter = mask_values > 0  # True if inside mask
+        mask = torch.logical_and(mask, mask_filter)
 
     if modify_func != None:
         means3D, scales, rotations = modify_func(means3D, scales, rotations, time[0])
