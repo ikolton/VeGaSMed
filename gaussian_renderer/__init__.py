@@ -110,8 +110,8 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     mask = torch.logical_and(mask1, mask2)
 
     if mask_tensor is not None:
-        if torch.count_nonzero(mask_tensor) != 0:
-            print(f"🚨 WARNING: Mask is not empty")
+        # if torch.count_nonzero(mask_tensor) != 0:
+            # print(f"🚨 WARNING: Mask is not empty")
 
         homogeneous_coords = torch.cat([means3D, torch.ones_like(means3D[:, :1])], dim=-1)  # Convert to homogeneous coords
         projected = torch.matmul(viewpoint_camera.full_proj_transform, homogeneous_coords.T).T  # Apply projection
@@ -130,13 +130,15 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         mask_tensor = mask_tensor.unsqueeze(1)
 
         if viewpoint_camera.time == 325:
-            print(means2D.shape)
-            print(means2D[:10])
-            print(f"✅ Sampling grid shape: {sampling_grid.shape}")
-            print(f"✅ Sampling grid X range: {sampling_grid[..., 0].min().item()} → {sampling_grid[..., 0].max().item()}")
-            print(f"✅ Sampling grid Y range: {sampling_grid[..., 1].min().item()} → {sampling_grid[..., 1].max().item()}")
-            print(f"🔵 projected_means2D min/max: {projected_means2D.min().item()} → {projected_means2D.max().item()}")
+            print(f"🟢 Mask Tensor shape: {mask_tensor.shape}")  # Expect [1, 1, H, W]
+            print(f"🟢 Mask Tensor min/max: {mask_tensor.min().item()} → {mask_tensor.max().item()}")  # Expect non-zero if valid
+            
+            print(f"🟢 Sampling Grid shape: {sampling_grid.shape}")  # Expect [1, 1, num_gaussians, 2]
+            print(f"🟢 Sampling Grid X range: {sampling_grid[..., 0].min().item()} → {sampling_grid[..., 0].max().item()}")
+            print(f"🟢 Sampling Grid Y range: {sampling_grid[..., 1].min().item()} → {sampling_grid[..., 1].max().item()}")
 
+            print(f"🟢 Mask Values min/max before filtering: {mask_values.min().item()} → {mask_values.max().item()}")
+            print(f"🟢 Mask Values (first 10):", mask_values[:10])
 
 
         # ✅ Sample mask at Gaussian positions
