@@ -110,28 +110,28 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     mask = torch.logical_and(mask1, mask2)
 
     if mask_tensor is not None:
-        # Get 2D Gaussian positions
-        x_gauss = means2D[:, 0]  # Gaussian X-coordinates (normalized)
-        y_gauss = means2D[:, 1]  # Gaussian Y-coordinates (normalized)
+        # Get 2D Gaussian positions (normalized)
+        x_gauss = means2D[:, 0]  # X-coordinates
+        y_gauss = means2D[:, 1]  # Y-coordinates
 
-        # ✅ Create correct sampling grid [num_gaussians, 2] (NO z-dimension)
-        sampling_grid = torch.stack([x_gauss, y_gauss], dim=-1)  # Shape: [num_gaussians, 2]
-        sampling_grid = sampling_grid.unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, num_gaussians, 2]
+        # ✅ Ensure sampling grid is [1, 1, num_gaussians, 2] (no Z-dimension)
+        sampling_grid = torch.stack([x_gauss, y_gauss], dim=-1).unsqueeze(0).unsqueeze(0)
 
-        # ✅ Ensure mask_tensor has correct shape: [1, 1, H, W] (NO depth dimension)
+        # ✅ Ensure mask_tensor is [1, 1, H, W] (remove depth if necessary)
         if mask_tensor.dim() == 5:
-            mask_tensor = mask_tensor.squeeze(2)  # Remove extra depth if exists
+            mask_tensor = mask_tensor.squeeze(2)
 
-        # Sample mask at Gaussian positions
+        # ✅ Sample mask at Gaussian positions
         mask_values = torch.nn.functional.grid_sample(
-            mask_tensor,  # ✅ Now properly formatted
-            sampling_grid,  # Shape: [1, 1, num_gaussians, 2]
+            mask_tensor,  # Mask tensor: [1, 1, H, W]
+            sampling_grid,  # Sampling grid: [1, 1, num_gaussians, 2]
             mode="nearest", align_corners=True
         ).squeeze()
 
-        # Mask out Gaussians that fall outside the valid region
-        mask_filter = mask_values > 0  # True if inside mask
-        mask = torch.logical_and(mask, mask_filter)
+        # ✅ Mask out Gaussians that fall outside the valid region
+        mask_filter = mask_values > 0  # Keep only valid points
+        mask = torch.logical_and(mask, mask_filter)  # Apply to existing mask
+
 
     if modify_func != None:
         means3D, scales, rotations = modify_func(means3D, scales, rotations, time[0])
