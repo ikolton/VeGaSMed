@@ -112,6 +112,9 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     if mask_tensor is not None:
         if torch.count_nonzero(mask_tensor) != 0:
             print(f"🚨 WARNING: Mask is not empty")
+            print(f"🟢 means2D X min/max: {means2D[:, 0].min().item()} → {means2D[:, 0].max().item()}")
+            print(f"🟢 means2D Y min/max: {means2D[:, 1].min().item()} → {means2D[:, 1].max().item()}")
+
     
 
         
