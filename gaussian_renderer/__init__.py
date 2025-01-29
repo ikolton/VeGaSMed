@@ -119,7 +119,8 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         sampling_grid = sampling_grid.unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, num_gaussians, 2]
 
         # ✅ Ensure mask_tensor has correct shape: [1, 1, H, W] (NO depth dimension)
-        mask_tensor = mask_tensor.squeeze(2) if mask_tensor.dim() == 5 else mask_tensor  # Remove extra depth if exists
+        if mask_tensor.dim() == 5:
+            mask_tensor = mask_tensor.squeeze(2)  # Remove extra depth if exists
 
         # Sample mask at Gaussian positions
         mask_values = torch.nn.functional.grid_sample(
