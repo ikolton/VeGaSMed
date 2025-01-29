@@ -110,8 +110,9 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     mask = torch.logical_and(mask1, mask2)
 
     if mask_tensor is not None:
-        print("✅ Mask tensor shape:", mask_tensor.shape)
-        print("✅ Mask tensor min/max:", mask_tensor.min().item(), mask_tensor.max().item())
+        if torch.count_nonzero(mask_tensor) != 0:
+            print(f"🚨 WARNING: Mask is not empty")
+    
 
         
         x_gauss = means2D[:, 0]  # X-coordinates
@@ -123,9 +124,10 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         # ✅ Ensure mask_tensor is [1, 1, H, W] (remove depth if necessary)
         mask_tensor = mask_tensor.unsqueeze(1)
 
-        print("✅ Sampling grid shape:", sampling_grid.shape)
-        print("✅ Sampling grid X range:", sampling_grid[..., 0].min().item(), sampling_grid[..., 0].max().item())
-        print("✅ Sampling grid Y range:", sampling_grid[..., 1].min().item(), sampling_grid[..., 1].max().item())
+        if viewpoint_camera.time == 325:
+            print(f"✅ Sampling grid shape: {sampling_grid.shape}")
+            print(f"✅ Sampling grid X range: {sampling_grid[..., 0].min().item()} → {sampling_grid[..., 0].max().item()}")
+            print(f"✅ Sampling grid Y range: {sampling_grid[..., 1].min().item()} → {sampling_grid[..., 1].max().item()}")
 
 
         # ✅ Sample mask at Gaussian positions
@@ -134,15 +136,16 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
             sampling_grid,  # Sampling grid: [1, 1, num_gaussians, 2]
             mode="nearest", align_corners=True
         ).squeeze()
-
-        print("✅ Sampled mask values min/max:", mask_values.min().item(), mask_values.max().item())
-        print("Sampled mask values (first 10):", mask_values[:10])
+        if viewpoint_camera.time == 325:
+            print("✅ Sampled mask values min/max:", mask_values.min().item(), mask_values.max().item())
+            print("Sampled mask values (first 10):", mask_values[:10])
 
 
         # ✅ Mask out Gaussians that fall outside the valid region
         mask_filter = mask_values > 0  # Keep only valid points
-        print("Before Masking: #Gaussians", mask.sum().item())  
-        print("Mask Filtered: #Gaussians", mask_filter.sum().item())  
+        if viewpoint_camera.time == 325:
+            print("Before Masking: #Gaussians", mask.sum().item())  
+            print("Mask Filtered: #Gaussians", mask_filter.sum().item())  
 
         mask = torch.logical_and(mask, mask_filter)  # Apply to existing mask
 
