@@ -139,6 +139,8 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
 
 
 
+        # ✅ Scale from [-1,1] to [0,1] ONLY for grid_sample()
+        sampling_grid = (sampling_grid + 1) / 2  # Shift range from [-1,1] → [0,1]
 
         # ✅ Sample mask at Gaussian positions
         mask_values = torch.nn.functional.grid_sample(
